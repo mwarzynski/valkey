@@ -1236,6 +1236,8 @@ typedef struct ClientFlags {
     uint64_t reserved : 5;                 /* Reserved for future use */
 } ClientFlags;
 
+struct observeClient;
+
 typedef struct client {
     uint64_t id; /* Client incremental unique ID. */
     union {
@@ -1382,6 +1384,8 @@ typedef struct client {
     unsigned long long commands_processed;       /* Total count of commands this client executed. */
     unsigned long long
         net_output_bytes_curr_cmd; /* Total network output bytes sent to this client, by the current command. */
+
+    struct observeClient *observe;
 } client;
 
 /* When a command generates a lot of discrete elements to the client output buffer, it is much faster to
@@ -1660,6 +1664,8 @@ typedef enum childInfoType {
     CHILD_INFO_TYPE_RDB_COW_SIZE,
     CHILD_INFO_TYPE_MODULE_COW_SIZE
 } childInfoType;
+
+struct observeServer;
 
 struct valkeyServer {
     /* General */
@@ -2244,6 +2250,8 @@ struct valkeyServer {
     /* Local environment */
     char *locale_collate;
     char *debug_context; /* A free-form string that has no impact on server except being included in a crash report. */
+    /* Observability */
+    struct observeServer *observe;
 };
 
 #define MAX_KEYS_BUFFER 256
@@ -3988,6 +3996,7 @@ void lcsCommand(client *c);
 void quitCommand(client *c);
 void resetCommand(client *c);
 void failoverCommand(client *c);
+void observeCommand(client *c);
 
 #if defined(__GNUC__)
 void *calloc(size_t count, size_t size) __attribute__((deprecated));

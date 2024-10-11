@@ -29,6 +29,7 @@
 
 #include "server.h"
 #include "monotonic.h"
+#include "observe.h"
 #include "cluster.h"
 #include "cluster_slot_stats.h"
 #include "slowlog.h"
@@ -43,6 +44,7 @@
 #include "io_threads.h"
 #include "sds.h"
 
+#include <stdlib.h>
 #include <time.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -2863,6 +2865,9 @@ void initServer(void) {
     applyWatchdogPeriod();
 
     if (server.maxmemory_clients != 0) initServerClientMemUsageBuckets();
+
+    /* Initialize Observe Server */
+    server.observe = initObserveServer();
 }
 
 void initListeners(void) {
@@ -3768,6 +3773,11 @@ void call(client *c, int flags) {
     }
 
     server.executing_client = prev_client;
+
+    /* Observe logic after command execution */
+    if (server.observe->enabled) {
+        observePostCommand(c, duration);
+    }
 }
 
 /* Used when a command that is ready for execution needs to be rejected, due to

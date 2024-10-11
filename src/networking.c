@@ -35,6 +35,7 @@
 #include "fpconv_dtoa.h"
 #include "fmtargs.h"
 #include "io_threads.h"
+#include "observe.h"
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
@@ -234,6 +235,7 @@ client *createClient(connection *conn) {
     c->commands_processed = 0;
     c->io_last_reply_block = NULL;
     c->io_last_bufpos = 0;
+    c->observe = initObserveClient();
     return c;
 }
 
@@ -1815,6 +1817,7 @@ void freeClient(client *c) {
     sdsfree(c->peerid);
     sdsfree(c->sockname);
     sdsfree(c->replica_addr);
+    freeObserveClient(c->observe);
     zfree(c);
 }
 
