@@ -1,0 +1,25 @@
+{
+    "CONFIGURE": {
+        "summary": "Configures an existing and non running Observability Pipeline",
+        "complexity": "tbd",
+        "group": "server",
+        "since": "8.0.0",
+        "arity": -2,
+        "container": "OBSERVE",
+        "function": "observeCommand",
+        "command_flags": [],
+        "reply_schema": {},
+        "arguments": [
+            {
+                "name": "name",
+                "type": "string",
+                "optional": false
+            },
+            {
+                "name": "step",
+                "type": "string",
+                "optional": false
+            }
+        ]
+    }
+}
