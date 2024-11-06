@@ -3775,9 +3775,7 @@ void call(client *c, int flags) {
     server.executing_client = prev_client;
 
     /* Observe logic after command execution */
-    if (server.observe->enabled) {
-        observePostCommand(c, duration);
-    }
+    observePostCommand(c, duration);
 }
 
 /* Used when a command that is ready for execution needs to be rejected, due to

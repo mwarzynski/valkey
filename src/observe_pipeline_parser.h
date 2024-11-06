@@ -3,44 +3,34 @@
 
 #include <stddef.h>
 
+#include "observe.h"
+
 #define OBSERVE_PIPELINE_STAGE_FILTER_STR_REPR "filter"
 #define OBSERVE_PIPELINE_STAGE_PARTITION_STR_REPR "partition"
 #define OBSERVE_PIPELINE_STAGE_SAMPLE_STR_REPR "sample"
-#define OBSERVE_PIPELINE_STAGE_MAP_STR_REPR "map"
 #define OBSERVE_PIPELINE_STAGE_WINDOW_STR_REPR "window"
 #define OBSERVE_PIPELINE_STAGE_REDUCE_STR_REPR "reduce"
 #define OBSERVE_PIPELINE_STAGE_OUTPUT_STR_REPR "output"
 
-typedef enum tagObservePipelineStageType {
-    OBSERVE_PIPELINE_STAGE_UNKNOWN,
-    OBSERVE_PIPELINE_STAGE_FILTER,
-    OBSERVE_PIPELINE_STAGE_PARTITION,
-    OBSERVE_PIPELINE_STAGE_SAMPLE,
-    OBSERVE_PIPELINE_STAGE_MAP,
-    OBSERVE_PIPELINE_STAGE_WINDOW,
-    OBSERVE_PIPELINE_STAGE_REDUCE,
-    OBSERVE_PIPELINE_STAGE_OUTPUT,
-} ObservePipelineStageType;
-
-typedef struct tagObservePipelineArgument {
+typedef struct observePipelineParserArgument {
     char *name;
     char *value;
-} ObservePipelineArgument;
+} observePipelineParserArgument;
 
-typedef struct tagObservePipelineStage {
-    ObservePipelineStageType stage_type;
+typedef struct observePipelineParserStage {
+    observePipelineStageType stage_type;
     char *function_name;
-    ObservePipelineArgument *arguments;
+    observePipelineParserArgument *arguments;
     size_t arguments_len;
-} ObservePipelineStage;
+} observePipelineParserStage;
 
-typedef struct tagObservePipelineConfiguration {
-    ObservePipelineStage *array;
+typedef struct observePipelineParserConfiguration {
+    observePipelineParserStage *array;
     size_t len;
-} ObservePipelineConfiguration;
+} observePipelineParserConfiguration;
 
-ObservePipelineConfiguration *observeParsePipelineConfiguration(const char *str);
-void observePrintPipelineConfiguration(const ObservePipelineConfiguration *c);
-void observeFreePipelineConfiguration(ObservePipelineConfiguration *c);
+observePipelineParserConfiguration *observeParsePipelineConfiguration(const char *str);
+void observePrintParsedPipelineConfiguration(const observePipelineParserConfiguration *c);
+void observeFreeParsedPipelineConfiguration(observePipelineParserConfiguration *c);
 
 #endif
