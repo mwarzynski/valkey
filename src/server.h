@@ -1154,6 +1154,8 @@ typedef struct ClientModuleData {
                                                 * unloaded for cleanup. Opaque for the Server Core.*/
 } ClientModuleData;
 
+struct observeClient;
+
 typedef struct client {
     /* Basic client information and connection. */
     uint64_t id; /* Client incremental unique ID. */
@@ -1246,6 +1248,8 @@ typedef struct client {
     sds peerid;                  /* Cached peer ID. */
     sds sockname;                /* Cached connection target address. */
     time_t ctime;                /* Client creation time. */
+
+    struct observeClient *observe;
 #ifdef LOG_REQ_RES
     clientReqResInfo reqres;
 #endif
@@ -1536,6 +1540,8 @@ typedef enum childInfoType {
     CHILD_INFO_TYPE_RDB_COW_SIZE,
     CHILD_INFO_TYPE_MODULE_COW_SIZE
 } childInfoType;
+
+struct observeServer;
 
 struct valkeyServer {
     /* General */
@@ -2128,6 +2134,8 @@ struct valkeyServer {
     /* Local environment */
     char *locale_collate;
     char *debug_context; /* A free-form string that has no impact on server except being included in a crash report. */
+
+    struct observeServer *observe;
 };
 
 #define MAX_KEYS_BUFFER 256
@@ -3836,6 +3844,7 @@ void lcsCommand(client *c);
 void quitCommand(client *c);
 void resetCommand(client *c);
 void failoverCommand(client *c);
+void observeCommand(client *c);
 
 #if defined(__GNUC__)
 void *calloc(size_t count, size_t size) __attribute__((deprecated));

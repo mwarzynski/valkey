@@ -1,0 +1,25 @@
+{
+    "TAP-RETRIEVE": {
+        "summary": "Retrieves the data gathered through the Tap Attachment",
+        "complexity": "tbd",
+        "group": "server",
+        "since": "8.0.0",
+        "arity": -2,
+        "container": "OBSERVE",
+        "function": "observeCommand",
+        "command_flags": [],
+        "reply_schema": {},
+        "arguments": [
+            {
+                "name": "tapName",
+                "type": "string",
+                "optional": false
+            },
+            {
+                "name": "attachmentName",
+                "type": "string",
+                "optional": false
+            }
+        ]
+    }
+}
