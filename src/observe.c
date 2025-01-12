@@ -7,6 +7,128 @@
 #include "server.h"
 #include "observe.h"
 
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+#include <stdio.h>
+#include <string.h>
+
+const char *observeLuaFnCode =
+"function observe_process_unit(observe_unit)\n"
+"    -- Process all SET commands.\n"
+"    if observe_unit.argv[1] == 'SET' then\n"
+"        return '1'\n"
+"    end\n"
+"\n"
+"    -- Process 5% of GET commands.\n"
+"    if observe_unit.argv[1] == 'GET' then\n"
+"        if math.random(1, 100) <= 5 then\n"
+"            return '1'\n"
+"        end\n"
+"    end\n"
+"\n"
+"    -- Default case: return '0'\n"
+"    return '0'\n"
+"end\n";
+
+
+// Global Lua state
+lua_State *observeL;
+
+// Initialize Lua environment
+int observeLuaInit(void) {
+    observeL = luaL_newstate();
+    if (!observeL) {
+        fprintf(stderr, "Failed to create Lua state\n");
+        return -1;
+    }
+    luaL_openlibs(observeL);
+
+    // Load Lua code
+    if (luaL_dostring(observeL, observeLuaFnCode) != 0) {
+        fprintf(stderr, "Error loading Lua code: %s\n", lua_tostring(observeL, -1));
+        lua_close(observeL);
+        return -1;
+    }
+
+    return 0;
+}
+
+
+// Push robj array to Lua as a table
+void observeLuaPushRobjArray(lua_State *L, robj **argv, size_t argv_len) {
+    lua_newtable(L); // Create a new table
+    for (size_t i = 0; i < argv_len; i++) {
+        lua_pushstring(L, argv[i]->ptr); // Push string value
+        lua_rawseti(L, -2, i + 1);       // Set table[i+1] = argv[i]->str (1-based indexing in Lua)
+    }
+}
+
+// Push observeUnit to Lua as a table
+void observeLuaPushObserveUnit(lua_State *L, const observeUnit *unit) {
+    lua_newtable(L); // Create a new table
+
+    // Add command_id
+    lua_pushstring(L, "command_id");
+    lua_pushinteger(L, unit->command_id);
+    lua_settable(L, -3);
+
+    // Add argv
+    lua_pushstring(L, "argv");
+    observeLuaPushRobjArray(L, unit->argv, unit->argv_len);
+    lua_settable(L, -3);
+
+    // Add response_size_bytes
+    lua_pushstring(L, "response_size_bytes");
+    lua_pushinteger(L, unit->response_size_bytes);
+    lua_settable(L, -3);
+
+    // Add duration_microseconds
+    lua_pushstring(L, "duration_microseconds");
+    lua_pushinteger(L, unit->duration_microseconds);
+    lua_settable(L, -3);
+}
+
+// Run Lua function
+char* observeRunProcessLuaFn(const observeUnit *unit) {
+    lua_getglobal(observeL, "observe_process_unit"); // Get the Lua function
+    observeLuaPushObserveUnit(observeL, unit);       // Push the observeUnit table
+
+    // Call the Lua function with 1 argument and 1 result
+    if (lua_pcall(observeL, 1, 1, 0) != 0) {
+        fprintf(stderr, "Error calling Lua function: %s\n", lua_tostring(observeL, -1));
+        return NULL;
+    }
+
+    // Get the result
+    const char *lua_result = lua_tostring(observeL, -1);
+    if (!lua_result) {
+        lua_pop(observeL, 1);  // Remove nil or non-string result
+        return NULL;
+    }
+
+    // Dynamically allocate memory for the result
+    char *result = zmalloc(strlen(lua_result) + 1);
+    if (!result) {
+        fprintf(stderr, "Memory allocation failed\n");
+        lua_pop(observeL, 1);  // Clean up Lua stack
+        return NULL;
+    }
+
+    valkey_strlcpy(result, lua_result, strlen(lua_result)+1); // Copy Lua result to allocated memory
+    lua_pop(observeL, 1);                                     // Clean up Lua stack
+
+    return result;
+}
+
+// Clean up Lua environment
+void observeLuaCleanup(void) {
+    if (observeL) {
+        lua_close(observeL);
+        observeL = NULL;
+    }
+}
+
 
 void observeCommand(client *c) {
     char *subcommand = NULL;
@@ -87,16 +209,33 @@ void observeProcessUnitPrint(const observeUnit *unit) {
     printf(" | execution_time=%.3fms\n", duration_ms);
 }
 
+int observeProcessUnitLua(const observeUnit *unit) {
+    int should_process_unit = 0;
+    char *result = observeRunProcessLuaFn(unit);
+    if (result) {
+        if (strcmp(result, "1") == 0) {
+            should_process_unit = 1;
+        }
+        zfree(result);
+    }
+    return should_process_unit;
+}
+
 void observeProcessUnit(const observeUnit *unit) {
+    // Run the Lua code for each Unit.
+    // It filters out the observe unit if 0 is returned.
+    if (observeProcessUnitLua(unit) == 0) {
+        return;
+    }
+
     // Print out the information about pipeline unit.
     observeProcessUnitPrint(unit);
 
     // Implement the unit pipeline processing.
-    observePipelineData pd = {.unit = unit};
+    // observePipelineData pd = {.unit = unit};
 
     // TODO: Implement the units procesing inside the pipeline.
     // I guess, I can start with something simpler, not necessarily customizable via Lua scripts.
-    printf("\tobserve pipeline result => %s\n", "todo(): pipeline executor");
 
     return;
 }
@@ -135,6 +274,7 @@ void deallocObserveUnitFields(observeUnit *unit) {
     unit->response_size_bytes = 0;
 }
 
+
 void observePostCommand(client *c, ustime_t duration) {
     // TODO: It should use the client->observe.enabled value to avoid concurrent rw.
     if (!server.observe->enabled) {
@@ -152,7 +292,7 @@ void observePostCommand(client *c, ustime_t duration) {
     deallocObserveUnitFields(&unit);
 }
 
-/* Constructors for observe structs. */
+/* Constructors / Destructors for observe structs. */
 
 observeClient *initObserveClient(void) {
     observeClient *c = zmalloc(sizeof(observeClient));
@@ -168,9 +308,16 @@ observeServer *initObserveServer(void) {
     observeServer *c = zmalloc(sizeof(observeServer));
     assert(c != NULL);
     c->enabled = 0;
+
+    if (observeLuaInit() != 0) {
+        printf("FAILED TO INIT LUA\n");
+    }
+
     return c;
 }
 
 void freeObserveServer(observeServer *client) {
+    observeLuaCleanup();
+
     zfree(client);
 }
