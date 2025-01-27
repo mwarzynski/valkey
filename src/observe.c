@@ -13,16 +13,78 @@
 #include <stdio.h>
 #include <string.h>
 
+// === ./src/valkey-benchmark -h localhost -p 6379 -t get,set -n 1000000 -c 20 ===
+//
+// No OBSERVE enabled:
+// Summary:
+//   throughput summary: 50408.31 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.215     0.064     0.207     0.287     0.383     3.671
+// Summary:
+//   throughput summary: 51002.19 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.212     0.072     0.207     0.279     0.359     3.327
+// Summary:
+//   throughput summary: 51848.39 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.208     0.072     0.207     0.255     0.327     1.631
+// Summary:
+//   throughput summary: 50471.91 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.213     0.072     0.207     0.271     0.343     4.007
+// Summary:
+//   throughput summary: 50973.59 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.212     0.064     0.207     0.279     0.351     1.527
+
+// OBSERVE enabled with Lua code
+// Summary:
+//   throughput summary: 48489.55 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.259     0.096     0.231     0.439     0.631     3.071
+// Summary:
+//   throughput summary: 50299.28 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.241     0.096     0.215     0.383     0.567     5.503
+// Summary:
+//   throughput summary: 47719.03 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.270     0.096     0.239     0.455     0.615     9.175
+// Summary:
+//   throughput summary: 50337.26 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.240     0.064     0.215     0.375     0.535     6.455
+// Summary:
+//   throughput summary: 47368.67 requests per second
+//   latency summary (msec):
+//           avg       min       p50       p95       p99       max
+//         0.274     0.088     0.247     0.471     0.631     1.959
+
+
+
+
+
 const char *observeLuaFnCode =
 "function observe_process_unit(observe_unit)\n"
-"    -- Process all SET commands.\n"
+"    -- Process 2% of SET commands.\n"
 "    if observe_unit.argv[1] == 'SET' then\n"
-"        return '1'\n"
+"        if math.random(1, 100) <= 2 then\n"
+"            return '1'\n"
+"        end\n"
 "    end\n"
 "\n"
-"    -- Process 5% of GET commands.\n"
+"    -- Process 1% of GET commands.\n"
 "    if observe_unit.argv[1] == 'GET' then\n"
-"        if math.random(1, 100) <= 5 then\n"
+"        if math.random(1, 100) <= 1 then\n"
 "            return '1'\n"
 "        end\n"
 "    end\n"
