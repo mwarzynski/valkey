@@ -73,8 +73,8 @@
 
 
 
-const char *observeLuaFnCode =
-"function observe_process_unit(observe_unit)\n"
+const char *observeLuaFnCodeDefault =
+"function filter(observe_unit)\n"
 "    -- Process 2% of SET commands.\n"
 "    if observe_unit.argv[1] == 'SET' then\n"
 "        if math.random(1, 100) <= 2 then\n"
@@ -106,8 +106,8 @@ int observeLuaInit(void) {
     }
     luaL_openlibs(observeL);
 
-    // Load Lua code
-    if (luaL_dostring(observeL, observeLuaFnCode) != 0) {
+    // Load the default Lua filter code
+    if (luaL_dostring(observeL, observeLuaFnCodeDefault) != 0) {
         fprintf(stderr, "Error loading Lua code: %s\n", lua_tostring(observeL, -1));
         lua_close(observeL);
         return -1;
@@ -152,8 +152,8 @@ void observeLuaPushObserveUnit(lua_State *L, const observeUnit *unit) {
 }
 
 // Run Lua function
-char* observeRunProcessLuaFn(const observeUnit *unit) {
-    lua_getglobal(observeL, "observe_process_unit"); // Get the Lua function
+char* observeRunFilterLuaFn(const observeUnit *unit) {
+    lua_getglobal(observeL, "filter"); // Get the Lua function
     observeLuaPushObserveUnit(observeL, unit);       // Push the observeUnit table
 
     // Call the Lua function with 1 argument and 1 result
@@ -191,73 +191,87 @@ void observeLuaCleanup(void) {
     }
 }
 
-
+/* OBSERVE Command Implementation */
 void observeCommand(client *c) {
-    char *subcommand = NULL;
-    if (c->argc < 2) {
-        addReplyError(c, "no arguments provided");
+    if (c->argc < 4) {
+        addReplyError(c, "Usage: OBSERVE PIPELINE CREATE <pipeline_name> INPUT <source> [FILTER LUA <lua_script>]");
         return;
     }
-    subcommand = c->argv[1]->ptr;
 
-    if (!strcasecmp(subcommand, "TAP-ATTACH")) {
-        if (c->argc != 4 && c->argc != 5) {
-            addReplyError(c, "invalid arguments");
-            return;
-        }
-        robj *tap_name = c->argv[2];
-        robj *attachment_name = c->argv[3];
-        robj *lua_code = NULL;
-        if (c->argc == 5) {
-            lua_code = c->argv[4];
-        }
+    /* Parse subcommand */
+    char *subcommand = c->argv[1]->ptr;
+    if (strcasecmp(subcommand, "PIPELINE") != 0) {
+        addReplyError(c, "Invalid subcommand. Supported: PIPELINE");
+        return;
+    }
 
-        if (lua_code != NULL) {
-            printf("tap-attach %s %s %s\n", (char*)tap_name->ptr, (char*)attachment_name->ptr, (char*)lua_code->ptr);
+    /* Parse action */
+    char *action = c->argv[2]->ptr;
+    if (strcasecmp(action, "CREATE") != 0) {
+        addReplyError(c, "Invalid action. Supported: CREATE");
+        return;
+    }
+
+    /* Pipeline Name */
+    robj *pipeline_name = c->argv[3];
+
+    /* Initialize pipeline components */
+    robj *input_source = NULL;
+    robj *lua_code = NULL;
+
+    /* Parse optional pipeline steps */
+    for (int i = 4; i < c->argc; i++) {
+        char *arg = c->argv[i]->ptr;
+
+        if (!strcasecmp(arg, "INPUT")) {
+            if (i + 1 >= c->argc) {
+                addReplyError(c, "INPUT requires a source argument");
+                return;
+            }
+            input_source = c->argv[++i];
+
+        } else if (!strcasecmp(arg, "FILTER")) {
+            if (i + 1 >= c->argc) {
+                addReplyError(c, "FILTER requires a LUA argument");
+                return;
+            }
+            while (i + 1 < c->argc) {
+                char *map_arg = c->argv[i + 1]->ptr;
+                if (!strcasecmp(map_arg, "LUA")) {
+                    if (i + 2 >= c->argc) {
+                        addReplyError(c, "FILTER LUA requires lua code that contains a filter() function");
+                        return;
+                    }
+                    lua_code = c->argv[i + 2];
+                    i += 2;
+                } else {
+                    break; // Exit FILTER block parsing
+                }
+            }
         } else {
-            printf("tap-attach %s %s\n", (char*)tap_name->ptr, (char*)attachment_name->ptr);
-        }
-
-        server.observe->enabled = true;
-
-        addReplyNull(c);
-        return;
-    }
-
-    if (!strcasecmp(subcommand, "TAP-DETACH")) {
-        if (c->argc != 4) {
-            addReplyError(c, "invalid arguments");
+            addReplyErrorFormat(c, "Unexpected argument: %s", arg);
             return;
         }
-        robj *tap_name = c->argv[2];
-        robj *attachment_name = c->argv[3];
-
-        printf("tap-detach: %s %s\n", (char*)tap_name->ptr, (char*)attachment_name->ptr);
-
-        server.observe->enabled = false;
-
-        addReplyNull(c);
-        return;
     }
 
-    if (!strcasecmp(subcommand, "TAP-RETRIEVE")) {
-        if (c->argc != 4) {
-            addReplyError(c, "invalid arguments");
-            return;
+    /* Debugging Output */
+    printf("Pipeline Created: %s\n", (char *)pipeline_name->ptr);
+    if (input_source) {
+        printf("  - INPUT: %s\n", (char *)input_source->ptr);
+    }
+    if (lua_code) {
+        printf("  - FILTER LUA: %s\n", (char *)lua_code->ptr);
+        if (luaL_dostring(observeL, (char*)lua_code->ptr) != 0) {
+            fprintf(stderr, "Error loading Lua code: %s\n", lua_tostring(observeL, -1));
         }
-        robj *tap_name = c->argv[2];
-        robj *attachment_name = c->argv[3];
-
-        printf("tap-retrieve: %s %s\n", (char*)tap_name->ptr, (char*)attachment_name->ptr);
-
-        addReplyNull(c);
-        return;
     }
 
-    addReplyNull(c);
-    return;
+    /* Enable observation (modify as needed for storage) */
+    server.observe->enabled = true;
+
+    /* Send success response */
+    addReplyStatusFormat(c, "Pipeline %s created successfully", (char *)pipeline_name->ptr);
 }
-
 
 /* Observe units and pipeline execution */
 
@@ -271,9 +285,9 @@ void observeProcessUnitPrint(const observeUnit *unit) {
     printf(" | execution_time=%.3fms\n", duration_ms);
 }
 
-int observeProcessUnitLua(const observeUnit *unit) {
+int observeProcessFilterUnit(const observeUnit *unit) {
     int should_process_unit = 0;
-    char *result = observeRunProcessLuaFn(unit);
+    char *result = observeRunFilterLuaFn(unit);
     if (result) {
         if (strcmp(result, "1") == 0) {
             should_process_unit = 1;
@@ -286,7 +300,7 @@ int observeProcessUnitLua(const observeUnit *unit) {
 void observeProcessUnit(const observeUnit *unit) {
     // Run the Lua code for each Unit.
     // It filters out the observe unit if 0 is returned.
-    if (observeProcessUnitLua(unit) == 0) {
+    if (observeProcessFilterUnit(unit) == 0) {
         return;
     }
 

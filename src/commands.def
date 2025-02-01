@@ -2293,6 +2293,43 @@ struct COMMAND_STRUCT OBJECT_Subcommands[] = {
 #define OBJECT_Keyspecs NULL
 #endif
 
+/********** OBSERVE ********************/
+
+#ifndef SKIP_CMD_HISTORY_TABLE
+/* OBSERVE history */
+#define OBSERVE_History NULL
+#endif
+
+#ifndef SKIP_CMD_TIPS_TABLE
+/* OBSERVE tips */
+#define OBSERVE_Tips NULL
+#endif
+
+#ifndef SKIP_CMD_KEY_SPECS_TABLE
+/* OBSERVE key specs */
+#define OBSERVE_Keyspecs NULL
+#endif
+
+/* OBSERVE steps filter argument table */
+struct COMMAND_ARG OBSERVE_steps_filter_Subargs[] = {
+{MAKE_ARG("lua",ARG_TYPE_STRING,-1,NULL,"Defines the Lua code to execute as part of the pipeline",NULL,CMD_ARG_OPTIONAL,0,NULL)},
+{MAKE_ARG("ignore",ARG_TYPE_STRING,-1,NULL,"Does nothing.",NULL,CMD_ARG_OPTIONAL,0,NULL)},
+};
+
+/* OBSERVE steps argument table */
+struct COMMAND_ARG OBSERVE_steps_Subargs[] = {
+{MAKE_ARG("input",ARG_TYPE_STRING,-1,NULL,"Defines an input source",NULL,CMD_ARG_NONE,0,NULL)},
+{MAKE_ARG("filter",ARG_TYPE_BLOCK,-1,NULL,"Executes a Filter in the pipeline",NULL,CMD_ARG_OPTIONAL,2,NULL),.subargs=OBSERVE_steps_filter_Subargs},
+};
+
+/* OBSERVE argument table */
+struct COMMAND_ARG OBSERVE_Args[] = {
+{MAKE_ARG("subcommand",ARG_TYPE_PURE_TOKEN,-1,NULL,"Specifies the operation type",NULL,CMD_ARG_NONE,0,NULL)},
+{MAKE_ARG("action",ARG_TYPE_PURE_TOKEN,-1,NULL,"Defines the action to perform",NULL,CMD_ARG_NONE,0,NULL)},
+{MAKE_ARG("name",ARG_TYPE_STRING,-1,NULL,"The name of the pipeline to create or manage",NULL,CMD_ARG_NONE,0,NULL)},
+{MAKE_ARG("steps",ARG_TYPE_BLOCK,-1,NULL,"Defines a sequence of pipeline steps",NULL,CMD_ARG_OPTIONAL,2,NULL),.subargs=OBSERVE_steps_Subargs},
+};
+
 /********** PERSIST ********************/
 
 #ifndef SKIP_CMD_HISTORY_TABLE
@@ -7500,100 +7537,6 @@ struct COMMAND_STRUCT MODULE_Subcommands[] = {
 #define MONITOR_Keyspecs NULL
 #endif
 
-/********** OBSERVE TAP_ATTACH ********************/
-
-#ifndef SKIP_CMD_HISTORY_TABLE
-/* OBSERVE TAP_ATTACH history */
-#define OBSERVE_TAP_ATTACH_History NULL
-#endif
-
-#ifndef SKIP_CMD_TIPS_TABLE
-/* OBSERVE TAP_ATTACH tips */
-#define OBSERVE_TAP_ATTACH_Tips NULL
-#endif
-
-#ifndef SKIP_CMD_KEY_SPECS_TABLE
-/* OBSERVE TAP_ATTACH key specs */
-#define OBSERVE_TAP_ATTACH_Keyspecs NULL
-#endif
-
-/* OBSERVE TAP_ATTACH argument table */
-struct COMMAND_ARG OBSERVE_TAP_ATTACH_Args[] = {
-{MAKE_ARG("tapname",ARG_TYPE_STRING,-1,NULL,NULL,NULL,CMD_ARG_NONE,0,NULL)},
-{MAKE_ARG("attachmentname",ARG_TYPE_STRING,-1,NULL,NULL,NULL,CMD_ARG_NONE,0,NULL)},
-{MAKE_ARG("luacode",ARG_TYPE_STRING,-1,NULL,NULL,NULL,CMD_ARG_OPTIONAL,0,NULL)},
-};
-
-/********** OBSERVE TAP_DETACH ********************/
-
-#ifndef SKIP_CMD_HISTORY_TABLE
-/* OBSERVE TAP_DETACH history */
-#define OBSERVE_TAP_DETACH_History NULL
-#endif
-
-#ifndef SKIP_CMD_TIPS_TABLE
-/* OBSERVE TAP_DETACH tips */
-#define OBSERVE_TAP_DETACH_Tips NULL
-#endif
-
-#ifndef SKIP_CMD_KEY_SPECS_TABLE
-/* OBSERVE TAP_DETACH key specs */
-#define OBSERVE_TAP_DETACH_Keyspecs NULL
-#endif
-
-/* OBSERVE TAP_DETACH argument table */
-struct COMMAND_ARG OBSERVE_TAP_DETACH_Args[] = {
-{MAKE_ARG("name",ARG_TYPE_STRING,-1,NULL,NULL,NULL,CMD_ARG_NONE,0,NULL)},
-};
-
-/********** OBSERVE TAP_RETRIEVE ********************/
-
-#ifndef SKIP_CMD_HISTORY_TABLE
-/* OBSERVE TAP_RETRIEVE history */
-#define OBSERVE_TAP_RETRIEVE_History NULL
-#endif
-
-#ifndef SKIP_CMD_TIPS_TABLE
-/* OBSERVE TAP_RETRIEVE tips */
-#define OBSERVE_TAP_RETRIEVE_Tips NULL
-#endif
-
-#ifndef SKIP_CMD_KEY_SPECS_TABLE
-/* OBSERVE TAP_RETRIEVE key specs */
-#define OBSERVE_TAP_RETRIEVE_Keyspecs NULL
-#endif
-
-/* OBSERVE TAP_RETRIEVE argument table */
-struct COMMAND_ARG OBSERVE_TAP_RETRIEVE_Args[] = {
-{MAKE_ARG("tapname",ARG_TYPE_STRING,-1,NULL,NULL,NULL,CMD_ARG_NONE,0,NULL)},
-{MAKE_ARG("attachmentname",ARG_TYPE_STRING,-1,NULL,NULL,NULL,CMD_ARG_NONE,0,NULL)},
-};
-
-/* OBSERVE command table */
-struct COMMAND_STRUCT OBSERVE_Subcommands[] = {
-{MAKE_CMD("tap-attach","Stops previously started Observability Pipeline","tbd","8.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,OBSERVE_TAP_ATTACH_History,0,OBSERVE_TAP_ATTACH_Tips,0,observeCommand,-2,0,0,OBSERVE_TAP_ATTACH_Keyspecs,0,NULL,3),.args=OBSERVE_TAP_ATTACH_Args},
-{MAKE_CMD("tap-detach","Detaches the Tap Attachment, which stops data collection","tbd","8.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,OBSERVE_TAP_DETACH_History,0,OBSERVE_TAP_DETACH_Tips,0,observeCommand,-2,0,0,OBSERVE_TAP_DETACH_Keyspecs,0,NULL,1),.args=OBSERVE_TAP_DETACH_Args},
-{MAKE_CMD("tap-retrieve","Retrieves the data gathered through the Tap Attachment","tbd","8.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,OBSERVE_TAP_RETRIEVE_History,0,OBSERVE_TAP_RETRIEVE_Tips,0,observeCommand,-2,0,0,OBSERVE_TAP_RETRIEVE_Keyspecs,0,NULL,2),.args=OBSERVE_TAP_RETRIEVE_Args},
-{0}
-};
-
-/********** OBSERVE ********************/
-
-#ifndef SKIP_CMD_HISTORY_TABLE
-/* OBSERVE history */
-#define OBSERVE_History NULL
-#endif
-
-#ifndef SKIP_CMD_TIPS_TABLE
-/* OBSERVE tips */
-#define OBSERVE_Tips NULL
-#endif
-
-#ifndef SKIP_CMD_KEY_SPECS_TABLE
-/* OBSERVE key specs */
-#define OBSERVE_Keyspecs NULL
-#endif
-
 /********** PSYNC ********************/
 
 #ifndef SKIP_CMD_HISTORY_TABLE
@@ -11023,6 +10966,7 @@ struct COMMAND_STRUCT serverCommandTable[] = {
 {MAKE_CMD("migrate","Atomically transfers a key from one instance to another.","This command actually executes a DUMP+DEL in the source instance, and a RESTORE in the target instance. See the pages of these commands for time complexity. Also an O(N) data transfer between the two instances is performed.","2.6.0",CMD_DOC_NONE,NULL,NULL,"generic",COMMAND_GROUP_GENERIC,MIGRATE_History,4,MIGRATE_Tips,1,migrateCommand,-6,CMD_WRITE,ACL_CATEGORY_KEYSPACE|ACL_CATEGORY_DANGEROUS,MIGRATE_Keyspecs,2,migrateGetKeys,9),.args=MIGRATE_Args},
 {MAKE_CMD("move","Moves a key to another database.","O(1)","1.0.0",CMD_DOC_NONE,NULL,NULL,"generic",COMMAND_GROUP_GENERIC,MOVE_History,0,MOVE_Tips,0,moveCommand,3,CMD_WRITE|CMD_FAST,ACL_CATEGORY_KEYSPACE,MOVE_Keyspecs,1,NULL,2),.args=MOVE_Args},
 {MAKE_CMD("object","A container for object introspection commands.","Depends on subcommand.","2.2.3",CMD_DOC_NONE,NULL,NULL,"generic",COMMAND_GROUP_GENERIC,OBJECT_History,0,OBJECT_Tips,0,NULL,-2,0,0,OBJECT_Keyspecs,0,NULL,0),.subcommands=OBJECT_Subcommands},
+{MAKE_CMD("observe","Observes and manages data pipelines",NULL,"8.0.0-todo",CMD_DOC_NONE,NULL,NULL,"generic",COMMAND_GROUP_GENERIC,OBSERVE_History,0,OBSERVE_Tips,0,observeCommand,-1,0,0,OBSERVE_Keyspecs,0,NULL,4),.args=OBSERVE_Args},
 {MAKE_CMD("persist","Removes the expiration time of a key.","O(1)","2.2.0",CMD_DOC_NONE,NULL,NULL,"generic",COMMAND_GROUP_GENERIC,PERSIST_History,0,PERSIST_Tips,0,persistCommand,2,CMD_WRITE|CMD_FAST,ACL_CATEGORY_KEYSPACE,PERSIST_Keyspecs,1,NULL,1),.args=PERSIST_Args},
 {MAKE_CMD("pexpire","Sets the expiration time of a key in milliseconds.","O(1)","2.6.0",CMD_DOC_NONE,NULL,NULL,"generic",COMMAND_GROUP_GENERIC,PEXPIRE_History,1,PEXPIRE_Tips,0,pexpireCommand,-3,CMD_WRITE|CMD_FAST,ACL_CATEGORY_KEYSPACE,PEXPIRE_Keyspecs,1,NULL,3),.args=PEXPIRE_Args},
 {MAKE_CMD("pexpireat","Sets the expiration time of a key to a Unix milliseconds timestamp.","O(1)","2.6.0",CMD_DOC_NONE,NULL,NULL,"generic",COMMAND_GROUP_GENERIC,PEXPIREAT_History,1,PEXPIREAT_Tips,0,pexpireatCommand,-3,CMD_WRITE|CMD_FAST,ACL_CATEGORY_KEYSPACE,PEXPIREAT_Keyspecs,1,NULL,3),.args=PEXPIREAT_Args},
@@ -11137,7 +11081,6 @@ struct COMMAND_STRUCT serverCommandTable[] = {
 {MAKE_CMD("memory","A container for memory diagnostics commands.","Depends on subcommand.","4.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,MEMORY_History,0,MEMORY_Tips,0,NULL,-2,0,0,MEMORY_Keyspecs,0,NULL,0),.subcommands=MEMORY_Subcommands},
 {MAKE_CMD("module","A container for module commands.","Depends on subcommand.","4.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,MODULE_History,0,MODULE_Tips,0,NULL,-2,0,0,MODULE_Keyspecs,0,NULL,0),.subcommands=MODULE_Subcommands},
 {MAKE_CMD("monitor","Listens for all requests received by the server in real-time.",NULL,"1.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,MONITOR_History,0,MONITOR_Tips,0,monitorCommand,1,CMD_ADMIN|CMD_NOSCRIPT|CMD_LOADING|CMD_STALE,0,MONITOR_Keyspecs,0,NULL,0)},
-{MAKE_CMD("observe","A container for observe commands.","Depends on subcommand.","8.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,OBSERVE_History,0,OBSERVE_Tips,0,NULL,-2,0,0,OBSERVE_Keyspecs,0,NULL,0),.subcommands=OBSERVE_Subcommands},
 {MAKE_CMD("psync","An internal command used in replication.",NULL,"2.8.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,PSYNC_History,0,PSYNC_Tips,0,syncCommand,-3,CMD_NO_ASYNC_LOADING|CMD_ADMIN|CMD_NO_MULTI|CMD_NOSCRIPT,0,PSYNC_Keyspecs,0,NULL,2),.args=PSYNC_Args},
 {MAKE_CMD("replconf","An internal command for configuring the replication stream.","O(1)","3.0.0",CMD_DOC_SYSCMD,NULL,NULL,"server",COMMAND_GROUP_SERVER,REPLCONF_History,0,REPLCONF_Tips,0,replconfCommand,-1,CMD_ADMIN|CMD_NOSCRIPT|CMD_LOADING|CMD_STALE|CMD_ALLOW_BUSY,0,REPLCONF_Keyspecs,0,NULL,0)},
 {MAKE_CMD("replicaof","Configures a server as replica of another, or promotes it to a primary.","O(1)","5.0.0",CMD_DOC_NONE,NULL,NULL,"server",COMMAND_GROUP_SERVER,REPLICAOF_History,0,REPLICAOF_Tips,0,replicaofCommand,3,CMD_NO_ASYNC_LOADING|CMD_ADMIN|CMD_NOSCRIPT|CMD_STALE,0,REPLICAOF_Keyspecs,0,NULL,1),.args=REPLICAOF_Args},

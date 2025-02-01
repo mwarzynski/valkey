@@ -1,10 +1,67 @@
 {
     "OBSERVE": {
-        "summary": "A container for observe commands.",
-        "complexity": "Depends on subcommand.",
-        "group": "server",
-        "since": "8.0.0",
-        "arity": -2,
-        "command_flags": []
+        "name": "observe",
+        "summary": "Observes and manages data pipelines",
+        "since": "8.0.0-todo",
+        "group": "generic",
+        "function": "observeCommand",
+        "container": null,
+        "arity": -1,
+        "arguments": [
+            {
+                "name": "subcommand",
+                "type": "pure-token",
+                "enum": ["PIPELINE"],
+                "summary": "Specifies the operation type",
+                "optional": false
+            },
+            {
+                "name": "action",
+                "type": "pure-token",
+                "enum": ["CREATE"],
+                "summary": "Defines the action to perform",
+                "optional": false
+            },
+            {
+                "name": "name",
+                "type": "string",
+                "summary": "The name of the pipeline to create or manage",
+                "optional": false
+            },
+            {
+                "name": "steps",
+                "type": "block",
+                "summary": "Defines a sequence of pipeline steps",
+                "optional": true,
+                "arguments": [
+                    {
+                        "name": "INPUT",
+                        "type": "string",
+                        "summary": "Defines an input source",
+                        "optional": false
+                    },
+                    {
+                        "name": "FILTER",
+                        "type": "block",
+                        "summary": "Executes a Filter in the pipeline",
+                        "optional": true,
+                        "arguments": [
+                            {
+                                "name": "LUA",
+                                "type": "string",
+                                "summary": "Defines the Lua code to execute as part of the pipeline",
+                                "optional": true
+                            },
+                            {
+                                "name": "IGNORE",
+                                "type": "string",
+                                "summary": "Does nothing.",
+                                "optional": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     }
 }
