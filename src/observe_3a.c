@@ -18,12 +18,8 @@
 
 const char *observeLuaFnCode =
 "function observe_process_unit(observe_unit)\n"
-"    if (observe_unit.request_id % 100) < 2 then\n"
-"       return true\n"
-"    end\n"
-"\n"
 "    -- Default case: return '0'\n"
-"    return false\n"
+"    return true\n"
 "end\n";
 
 
@@ -260,18 +256,6 @@ void observePostCommand(client *c, ustime_t duration) {
     lua_getglobal(observeL, "observe_process_unit");
 
     lua_newtable(observeL);
-
-    lua_pushstring(observeL, "request_id");
-    lua_pushinteger(observeL, requests);
-    lua_settable(observeL, -3);
-
-    lua_pushstring(observeL, "str_arg_1");
-    lua_pushstring(observeL, "This is a string paremeter sent as first argument");
-    lua_settable(observeL, -3);
-
-    lua_pushstring(observeL, "str_arg_2");
-    lua_pushstring(observeL, "This is another string paremeter sent as second argument");
-    lua_settable(observeL, -3);
 
     if (lua_pcall(observeL, 1, 1, 0) == 0) {
         lua_result = lua_toboolean(observeL, -1);

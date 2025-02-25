@@ -265,12 +265,8 @@ void observePostCommand(client *c, ustime_t duration) {
     lua_pushinteger(observeL, requests);
     lua_settable(observeL, -3);
 
-    lua_pushstring(observeL, "str_arg_1");
-    lua_pushstring(observeL, "This is a string paremeter sent as first argument");
-    lua_settable(observeL, -3);
-
-    lua_pushstring(observeL, "str_arg_2");
-    lua_pushstring(observeL, "This is another string paremeter sent as second argument");
+    lua_pushstring(observeL, "request_id_2");
+    lua_pushinteger(observeL, requests);
     lua_settable(observeL, -3);
 
     if (lua_pcall(observeL, 1, 1, 0) == 0) {
