@@ -1,0 +1,34 @@
+34124:M 18 Mar 2025 02:36:41.718 # WARNING: The TCP backlog setting of 511 cannot be enforced because kern.ipc.somaxconn is set to the lower value of 128.
+34124:M 18 Mar 2025 02:36:41.718 * Server initialized
+34124:M 18 Mar 2025 02:36:41.719 * Loading RDB produced by Valkey version 255.255.255
+34124:M 18 Mar 2025 02:36:41.719 * RDB age 17 seconds
+34124:M 18 Mar 2025 02:36:41.719 * RDB memory usage when created 1.17 Mb
+34124:M 18 Mar 2025 02:36:41.719 * Done loading RDB, keys loaded: 1, keys expired: 0.
+34124:M 18 Mar 2025 02:36:41.719 * DB loaded from disk: 0.000 seconds
+34124:M 18 Mar 2025 02:36:41.719 * Ready to accept connections tcp
+Requests: 0 Average time: 24000.000000 nanoseconds
+Requests: 2000000 Average time: 277.715861 nanoseconds
+Requests: 4000000 Average time: 276.072681 nanoseconds
+Requests: 6000000 Average time: 278.179454 nanoseconds
+34124:M 18 Mar 2025 02:37:42.075 * 10000 changes in 60 seconds. Saving...
+34124:M 18 Mar 2025 02:37:42.075 * Background saving started by pid 34358
+34358:C 18 Mar 2025 02:37:42.081 * DB saved on disk
+34358:C 18 Mar 2025 02:37:42.081 * Fork CoW for RDB: current 0 MB, peak 0 MB, average 0 MB
+34124:M 18 Mar 2025 02:37:42.175 * Background saving terminated with success
+Requests: 8000000 Average time: 281.880590 nanoseconds
+Requests: 10000000 Average time: 280.214272 nanoseconds
+Requests: 12000000 Average time: 280.099893 nanoseconds
+Requests: 14000000 Average time: 279.102766 nanoseconds
+34124:M 18 Mar 2025 02:38:43.096 * 10000 changes in 60 seconds. Saving...
+34124:M 18 Mar 2025 02:38:43.097 * Background saving started by pid 34590
+34590:C 18 Mar 2025 02:38:43.103 * DB saved on disk
+34590:C 18 Mar 2025 02:38:43.104 * Fork CoW for RDB: current 0 MB, peak 0 MB, average 0 MB
+34124:M 18 Mar 2025 02:38:43.197 * Background saving terminated with success
+Requests: 16000000 Average time: 278.621983 nanoseconds
+Requests: 18000000 Average time: 278.314985 nanoseconds
+Requests: 20000000 Average time: 278.174136 nanoseconds
+34124:M 18 Mar 2025 02:39:44.050 * 10000 changes in 60 seconds. Saving...
+34124:M 18 Mar 2025 02:39:44.052 * Background saving started by pid 34805
+34805:C 18 Mar 2025 02:39:44.063 * DB saved on disk
+34805:C 18 Mar 2025 02:39:44.065 * Fork CoW for RDB: current 0 MB, peak 0 MB, average 0 MB
+34124:M 18 Mar 2025 02:39:44.153 * Background saving terminated with success

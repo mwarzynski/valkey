@@ -12,13 +12,16 @@
 #include <lauxlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 /* === ./src/valkey-benchmark -h localhost -p 6379 -t get,set -n 1000000 -c 20 ===
 */
 
 const char *observeLuaFnCode =
-"function observe_process_unit()\n"
+"function observe_process_unit(observe_unit)\n"
+"    if (observe_unit.request_id % 100) < 2 then\n"
+"       return true\n"
+"    end\n"
+"\n"
 "    -- Default case: return '0'\n"
 "    return false\n"
 "end\n";
@@ -263,7 +266,29 @@ void observePostCommand(client *c, ustime_t duration) {
 
     lua_getglobal(observeL, "observe_process_unit");
 
-    if (lua_pcall(observeL, 0, 1, 0) == 0) {
+    lua_newtable(observeL);
+
+    lua_pushstring(observeL, "request_id");
+    lua_pushinteger(observeL, requests);
+    lua_settable(observeL, -3);
+
+    lua_pushstring(observeL, "request_id_2");
+    lua_pushinteger(observeL, requests);
+    lua_settable(observeL, -3);
+
+    lua_pushstring(observeL, "request_id_3");
+    lua_pushinteger(observeL, requests);
+    lua_settable(observeL, -3);
+
+    lua_pushstring(observeL, "request_id_4");
+    lua_pushinteger(observeL, requests);
+    lua_settable(observeL, -3);
+
+    lua_pushstring(observeL, "request_id_5");
+    lua_pushinteger(observeL, requests);
+    lua_settable(observeL, -3);
+
+    if (lua_pcall(observeL, 1, 1, 0) == 0) {
         lua_result = lua_toboolean(observeL, -1);
     } else {
         fprintf(stderr, "Error calling Lua function: %s\n", lua_tostring(observeL, -1));
@@ -272,13 +297,13 @@ void observePostCommand(client *c, ustime_t duration) {
     lua_pop(observeL, 1);
 
     if (lua_result) {
-        printf("[%d] process observe unit [command_id=%d]:", requests, c->cmd->id);
+        // printf("[%d] process observe unit [command_id=%d]:", requests, c->cmd->id);
         for (int i = 0; i < c->argv_len; i++) {
-            printf(" '%s'", (char *)c->argv[i]->ptr);
+            // printf(" '%s'", (char *)c->argv[i]->ptr);
         }
-        printf(" | response_bytes=%llu", c->net_output_bytes_curr_cmd);
+        // printf(" | response_bytes=%llu", c->net_output_bytes_curr_cmd);
         float duration_ms = (float)duration / 1000;
-        printf(" | execution_time=%.3fms\n", duration_ms);
+        // printf(" | execution_time=%.3fms\n", duration_ms);
     }
 
     ++requests;

@@ -31,6 +31,7 @@ const char *observeLuaFnCode =
 lua_State *observeL;
 int observeFnRef;
 int requests = 0;
+long long acc_time_nsec = 0;
 
 // Initialize Lua environment
 int observeLuaInit(void) {
@@ -256,6 +257,12 @@ void deallocObserveUnitFields(observeUnit *unit) {
 
 void observePostCommand(client *c, ustime_t duration) {
     int lua_result = 0;
+    struct timespec start, end;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
+        fprintf(stderr, "clock_gettime start failed");
+        return;
+    }
 
     lua_getglobal(observeL, "observe_process_unit");
 
@@ -292,6 +299,20 @@ void observePostCommand(client *c, ustime_t duration) {
     }
 
     ++requests;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &end) != 0) {
+        fprintf(stderr, "clock_gettime end failed");
+        return;
+    }
+
+    long long elapsed_nsec = (end.tv_sec - start.tv_sec) * 1000000000LL +
+                                 (end.tv_nsec - start.tv_nsec);
+    acc_time_nsec += elapsed_nsec;
+
+    if ((requests % 2000000) == 1) {
+        double avg_nsec = (double) acc_time_nsec / requests;
+        printf("Requests: %d Average time: %f nanoseconds\n", requests - 1, avg_nsec);
+    }
 }
 
 /* Constructors / Destructors for observe structs. */
